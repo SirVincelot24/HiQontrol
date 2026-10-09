@@ -5,4 +5,4 @@ __author__ = 'Raphaël Doursenaud'
 
 __all__ = ['ip']
 
-import ip
+from . import ip

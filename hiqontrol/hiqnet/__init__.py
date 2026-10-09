@@ -5,6 +5,6 @@ __author__ = 'Raphaël Doursenaud'
 
 __all__ = ['device', 'protocol', 'service']
 
-import device
-import protocol
-import service
+from . import device
+from . import protocol
+from . import service

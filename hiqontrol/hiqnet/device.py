@@ -20,9 +20,9 @@ from __future__ import print_function
 
 __author__ = 'Raphaël Doursenaud'
 
-from flags import *
-from networkinfo import *
-from protocol import FullyQualifiedAddress
+from .flags import *
+from .networkinfo import *
+from .protocol import FullyQualifiedAddress
 import random
 
 

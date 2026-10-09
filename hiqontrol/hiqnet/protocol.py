@@ -10,8 +10,8 @@ import os
 import socket
 import binascii
 
-from flags import *
-from networkinfo import *
+from .flags import *
+from .networkinfo import *
 
 PROTOCOL_VERSION = 2
 PROTOCOL_MIN_VERSION = 1
