@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="Black">
+    <option name="sdkName" value="Python 3.12 (HiQontrol)" />
+  </component>
   <component name="EntryPointsManager">
     <entry_points version="2.0" />
   </component>
@@ -7,5 +10,5 @@
   <component name="ProjectKey">
     <option name="state" value="git@github.com:EMATech/HiQontrol.git" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 2.7.10 (/usr/bin/python2)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (HiQontrol)" project-jdk-type="Python SDK" />
 </project>
