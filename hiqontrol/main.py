@@ -10,6 +10,12 @@ from os import environ
 if environ.get('ANDROID_APP_PATH'):
     environ['PYTHON_EGG_CACHE'] = environ.get('ANDROID_APP_PATH')
 
+from kivy.support import install_twisted_reactor
+
+if __name__ == '__main__':
+    install_twisted_reactor()
+    from twisted.internet import reactor
+
 from kivy.app import App
 
 from kivy.logger import Logger
@@ -18,7 +24,6 @@ from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.screenmanager import ScreenManager, FallOutTransition
 from kivy.uix.textinput import TextInput
-from kivy.support import install_twisted_reactor
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.recycleview import RecycleView
@@ -33,10 +38,6 @@ import hiqnet
 import soundcraft
 
 on_rtd = environ.get('READTHEDOCS') == 'True'
-
-if __name__ == '__main__':
-    install_twisted_reactor()
-    from twisted.internet import reactor
 
 # FIXME: this should not be hardcoded but autodetected
 SI_COMPACT_16_IP = '192.168.1.20'
@@ -53,10 +54,10 @@ class ListLocateButton(Button):
     serial_number = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
-        self.hiqnet_address = kwargs['hiqnet_address']
-        self.ip_address = kwargs['ip_address']
-        self.serial_number = kwargs['serial_number']
-        super(ListLocateButton, self).__init__(**kwargs)
+        super().__init__(**kwargs)
+        # self.hiqnet_address = kwargs['hiqnet_address']
+        # self.ip_address = kwargs['ip_address']
+        # self.serial_number = kwargs['serial_number']
 
     def toggle_blinking(self):
         if self.blinking:
@@ -94,7 +95,7 @@ class ListLocateButton(Button):
                 self.serial_number
             )
 
-    def on_parent(self, parent):
+    def on_parent(self, instance, parent):
         # Stop scheduled callbacks if this button is removed.
         if parent is None:
             self.blink_stop()
@@ -201,6 +202,7 @@ class HiQontrolApp(App):
     screen = None
     udp_transport = None
     tcp_transport = None
+    serial_number = SI_COMPACT_16_SERIAL # FIXME get serial
 
     def build(self):
         reactor.listenTCP(hiqnet.service.ip.PORT, hiqnet.service.ip.Factory(self))
