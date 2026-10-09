@@ -25,6 +25,41 @@
 
 <HomeScreen@Screen>
 
+<DeviceRow>:
+    orientation: 'horizontal'
+    size_hint_y: None
+    height: 50
+    spacing: 2
+
+    Button:
+        text: root.text
+        size_hint_x: 1
+        background_color: (0.3, 0.5, 0.8, 1) if root.is_selected else (1, 1, 1, 1)
+        on_release: root.select_device()
+
+    ListInfoButton:
+        text: 'i'
+        size_hint_x: None
+        width: 45
+        on_release: root.show_info()
+
+    ListLocateButton:
+        text: 'L'
+        size_hint_x: None
+        width: 45
+        hiqnet_address: root.hiqnet_address
+        ip_address: root.ip_address
+        serial_number: app.serial_number
+        on_press:
+            app.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
+            self.toggle_blinking()
+
+    ListMixButton:
+        text: '>'
+        size_hint_x: None
+        width: 45
+        on_release: root.open_mixer()
+
 <ListLocateButton>
     on_press:
         app.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
@@ -273,9 +308,17 @@
                         infos: infos.__self__
                         cols: 2
 
-                        ListView:
-                            infos: infos.__self__
-                            adapter: root.list
+                        DeviceList:
+                            id: device_list
+                            data: root.list
+                            viewclass: 'DeviceRow'
+
+                            RecycleBoxLayout:
+                                default_size: None, 50
+                                default_size_hint: 1, None
+                                size_hint_y: None
+                                height: self.minimum_height
+                                orientation: 'vertical'
 
                     VBoxLayout:
                         orientation: 'horizontal'

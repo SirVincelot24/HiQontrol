@@ -3,9 +3,8 @@
 
 __author__ = 'Raphaël Doursenaud'
 
-import re
 import binascii
-
+import re
 from os import environ
 
 if environ.get('ANDROID_APP_PATH'):
@@ -15,13 +14,20 @@ from kivy.app import App
 
 from kivy.logger import Logger
 from kivy.storage.jsonstore import JsonStore
-from kivy.adapters.dictadapter import DictAdapter
 from kivy.properties import ObjectProperty
 from kivy.clock import Clock
-from kivy.uix.screenmanager import ScreenManager
+from kivy.uix.screenmanager import ScreenManager, FallOutTransition
 from kivy.uix.textinput import TextInput
-from kivy.uix.listview import CompositeListItem, ListItemButton
 from kivy.support import install_twisted_reactor
+from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.button import Button
+from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.properties import (
+    BooleanProperty,
+    NumericProperty,
+    StringProperty,
+)
 
 import hiqnet
 import soundcraft
@@ -40,8 +46,11 @@ SI_COMPACT_16_SERIAL = b'\x53\x69\x43\x6f\x6d\x70\x61\x63\x74\x00\x00\x00\x00\x0
 APPNAME = 'HiQontrol'
 
 
-class ListLocateButton(ListItemButton):
-    blinking = False
+class ListLocateButton(Button):
+    blinking = BooleanProperty(False)
+    hiqnet_address = NumericProperty(0)
+    ip_address = StringProperty("")
+    serial_number = ObjectProperty(None, allownone=True)
 
     def __init__(self, **kwargs):
         self.hiqnet_address = kwargs['hiqnet_address']
@@ -56,6 +65,8 @@ class ListLocateButton(ListItemButton):
             self.blink_start()
 
     def blink_start(self):
+        if self.blinking:
+            return
         self.background_color = [1, 0, 0, 1]
         Clock.schedule_interval(self.change_color, .5)
         self.blinking = True
@@ -67,20 +78,65 @@ class ListLocateButton(ListItemButton):
     # noinspection PyUnusedLocal
     def change_color(self, *args):
         self.background_color = [
-            int(not bool(self.background_color[0])),
+            0 if self.background_color[0] else 1,
             self.background_color[1],
             self.background_color[2],
             self.background_color[3],
         ]
 
+    def on_release(self):
+        app = App.get_running_app()
 
-class ListInfoButton(ListItemButton):
+        if app.control is not None:
+            app.locate_toggle(
+                self.hiqnet_address,
+                self.ip_address,
+                self.serial_number
+            )
+
+    def on_parent(self, parent):
+        # Stop scheduled callbacks if this button is removed.
+        if parent is None:
+            self.blink_stop()
+
+
+class ListInfoButton(Button):
     pass
 
-
-class ListMixButton(ListItemButton):
+class ListMixButton(Button):
     pass
 
+class DeviceRow(RecycleDataViewBehavior, BoxLayout):
+    text = StringProperty("")
+    ip_address = StringProperty("")
+    hiqnet_address = NumericProperty(0)
+    is_selected = BooleanProperty(False)
+
+    def refresh_view_attrs(self, rv, index, data):
+        result = super().refresh_view_attrs(rv, index, data)
+        self.index = index
+        return result
+
+    def select_device(self):
+        rv = self.parent.parent
+        rv.selected_index = self.index
+
+        for i, item in enumerate(rv.data):
+            item["is_selected"] = (i == self.index)
+
+        rv.refresh_from_data()
+
+    def show_info(self):
+        app = App.get_running_app()
+        app.screen.current_screen.ids.infos.open()
+
+    def open_mixer(self):
+        app = App.get_running_app()
+        app.screen.transition = FallOutTransition()
+        app.screen.current = "mix"
+
+class DeviceList(RecycleView):
+    selected_index = NumericProperty(-1)
 
 class HiQNetAddressInput(TextInput):
     # FIXME: don't allow value of 0 or over 65535
@@ -218,43 +274,31 @@ class HiQontrolApp(App):
         self.control.locate_toggle(hiqnet_dest, ip_dest, serial_dest)
 
     def populate(self):
-        # FIXME: This should be dynamically detected from the network or manually added/removed
-        item_strings = ['0', '1']
+        # FIXME: Detect devices dynamically or allow manual management.
         integers_dict = {
-            '0': {'text': 'Si Compact 16', 'ip_address': SI_COMPACT_16_IP,
-                  'hiqnet_address': SI_COMPACT_16_DEVICE_ADDRESS,
-                  'is_selected': False},
-            '1': {'text': 'Lool', 'ip_address': '192.168.1.3', 'hiqnet_address': 9999, 'is_selected': False}}
+            '0': {
+                'text': 'Si Compact 16',
+                'ip_address': SI_COMPACT_16_IP,
+                'hiqnet_address': SI_COMPACT_16_DEVICE_ADDRESS,
+                'is_selected': False,
+            },
+            '1': {
+                'text': 'Lool',
+                'ip_address': '192.168.1.3',
+                'hiqnet_address': 9999,
+                'is_selected': False,
+            },
+        }
 
-        args_converter = \
-            lambda row_index, rec: \
-            {'text': rec['text'],
-             'size_hint_y': None,
-             'height': 50,
-             'cls_dicts': [{'cls': ListItemButton,
-                            'kwargs': {'text': rec['text'],
-                                       'is_representing_cls': True}},
-                           {'cls': ListInfoButton,
-                            'kwargs': {'text': 'i',  # TODO: replace by a nice icon
-                                       'size_hint_x': None}},
-                           {'cls': ListLocateButton,
-                            'kwargs': {'text': 'L',  # TODO: replace by a nice icon
-                                       'size_hint_x': None,
-                                       'hiqnet_address': rec['hiqnet_address'],
-                                       'ip_address': rec['ip_address'],
-                                       'serial_number': SI_COMPACT_16_SERIAL}},  # FIXME
-                           {'cls': ListMixButton,
-                            'kwargs': {'text': '>',  # TODO: replace by a nice icon
-                                       'size_hint_x': None}}]}
-
-        dict_adapter = DictAdapter(sorted_keys=item_strings,
-                                   data=integers_dict,
-                                   args_converter=args_converter,
-                                   selection_mode='single',
-                                   allow_empty_selection=False,
-                                   cls=CompositeListItem)
-
-        return dict_adapter
+        return [
+            {
+                'text': rec['text'],
+                'ip_address': rec['ip_address'],
+                'hiqnet_address': rec['hiqnet_address'],
+                'is_selected': rec['is_selected'],
+            }
+            for key, rec in sorted(integers_dict.items())
+        ]
 
     def handle_message(self, message, host, protocol):
         """Handle messages received from twisted servers.
