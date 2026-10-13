@@ -26,7 +26,7 @@ class NetworkInfo(object):
 
 
 class RS232NetworkInfo(NetworkInfo):
-    """RS232 network informations.
+    """RS232 network information.
 
 .. note:: Not implemented
 
