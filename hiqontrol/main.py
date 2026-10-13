@@ -160,10 +160,10 @@ class Control(object):
         self.udp_transport = udp_transport
         self.tcp_transport = tcp_transport
 
-    def init(self, hiqnet_dest):
+    def init(self, hiqnet_dest, vd_address: bytes = None, object_address: bytes = None):
         c = hiqnet.service.ip.Connection(self.udp_transport, self.tcp_transport)
         source_address = self.source_device.address
-        destination_address = hiqnet.protocol.FullyQualifiedAddress(device_address=hiqnet_dest)
+        destination_address = hiqnet.protocol.FullyQualifiedAddress(device_address=hiqnet_dest, vd_address=vd_address, object_address=object_address)
         message = hiqnet.protocol.Command(source=source_address, destination=destination_address)
         return c, message
 
