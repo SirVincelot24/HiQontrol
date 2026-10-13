@@ -134,8 +134,8 @@ class FullyQualifiedAddress(object):
 
     def __init__(self,
                  device_address=None,
-                 vd_address=b'\x00',
-                 object_address=b'\x00\x00\x00',
+                 vd_address=None,
+                 object_address=None,
                  devicevdobject=None,
                  ):
         """Build a Fully Qualified HiQnet Address.
@@ -161,8 +161,8 @@ class FullyQualifiedAddress(object):
         else:
             self.device_address = device_address
             # TODO: make vd_address and object_address int rather than byte arrays
-            self.vd_address = vd_address
-            self.object_address = object_address
+            self.vd_address = vd_address or b'\x00'
+            self.object_address = object_address or b'\x00\x00\x00'
 
     @classmethod
     def broadcast_address(cls):
