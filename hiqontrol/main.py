@@ -177,6 +177,11 @@ class Control(object):
             self.locate = False
         c.sendto(message, ip_dest)
 
+    def toggle_lr_state(self, is_pressed: bool):
+        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        message.multi_param_set(is_pressed)
+        c.sendto(message, "192.168.178.33")
+
 
 class HiQontrol(ScreenManager):
     list = ObjectProperty()
@@ -274,6 +279,11 @@ class HiQontrolApp(App):
 
     def locate_toggle(self, hiqnet_dest, ip_dest, serial_dest):
         self.control.locate_toggle(hiqnet_dest, ip_dest, serial_dest)
+
+    def toggle_lr_state(self, widget):
+        is_pressed = widget.state == "down"
+        self.control.toggle_lr_state(is_pressed)
+        print(is_pressed)
 
     def populate(self):
         # FIXME: Detect devices dynamically or allow manual management.

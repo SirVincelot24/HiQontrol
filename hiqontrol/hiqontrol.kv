@@ -427,6 +427,8 @@
                 ToggleButton:
                     text: "ON"
                     size_hint_y: None
+                    # L & R btn
+                    on_state: app.toggle_lr_state(self)
 
                 Slider:
 

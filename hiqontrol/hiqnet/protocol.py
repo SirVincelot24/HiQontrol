@@ -674,6 +674,15 @@ class Command(object):
         serial_number_len = struct.pack('!H', len(serial_number))
         self.payload = time + serial_number_len + serial_number
 
+    def multi_param_set(self, value: bool):
+        """Build a MultiParamSet command."""
+        self.message = Message(name='MULTPARMSET')
+        if value:
+            self.payload = b'\x00\x01\x00\x01\x04\x00\x00\x00\x01'
+        else:
+            self.payload = b'\x00\x01\x00\x01\x04\x00\x00\x00\x00'
+
+
     def locate_on(self, serial_number):
         """Builds a locate command asking for the visual clue to be active.
 
