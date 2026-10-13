@@ -40,9 +40,9 @@ import soundcraft
 on_rtd = environ.get('READTHEDOCS') == 'True'
 
 # FIXME: this should not be hardcoded but autodetected
-SI_COMPACT_16_IP = '192.168.1.20'
-SI_COMPACT_16_DEVICE_ADDRESS = 1619
-SI_COMPACT_16_SERIAL = b'\x53\x69\x43\x6f\x6d\x70\x61\x63\x74\x00\x00\x00\x00\x00\x00\x00'  # SiCompact
+SI_IMPACT_IP = '192.168.178.33'
+SI_IMPACT_DEVICE_ADDRESS = 30850
+SI_IMPACT_SERIAL = b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x00\x00' # SiCompact
 
 APPNAME = 'HiQontrol'
 
@@ -202,7 +202,7 @@ class HiQontrolApp(App):
     screen = None
     udp_transport = None
     tcp_transport = None
-    serial_number = SI_COMPACT_16_SERIAL # FIXME get serial
+    serial_number = SI_IMPACT_SERIAL # FIXME get serial
 
     def build(self):
         reactor.listenTCP(hiqnet.service.ip.PORT, hiqnet.service.ip.Factory(self))
@@ -245,11 +245,11 @@ class HiQontrolApp(App):
 
     def get_hiqnet_address(self):
         # FIXME: placeholder
-        return str(SI_COMPACT_16_DEVICE_ADDRESS)
+        return str(SI_IMPACT_DEVICE_ADDRESS)
 
     def get_ip_address(self):
         # FIXME: placeholder
-        return SI_COMPACT_16_IP
+        return SI_IMPACT_IP
 
     def get_local_name(self):
         return self.device.manager.name_string
@@ -279,9 +279,9 @@ class HiQontrolApp(App):
         # FIXME: Detect devices dynamically or allow manual management.
         integers_dict = {
             '0': {
-                'text': 'Si Compact 16',
-                'ip_address': SI_COMPACT_16_IP,
-                'hiqnet_address': SI_COMPACT_16_DEVICE_ADDRESS,
+                'text': 'Si Impact (hardcoded)',
+                'ip_address': SI_IMPACT_IP,
+                'hiqnet_address': SI_IMPACT_DEVICE_ADDRESS,
                 'is_selected': False,
             },
             '1': {
