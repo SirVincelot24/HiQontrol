@@ -26,13 +26,8 @@ TODO
     - Mtx
     - FX
 
-Dependencies
+[Dependencies](requirements.txt)
 ============
-
-- Python 2 (Python 3 Kivy does not support Twisted ATM)
-- [Kivy](kivy.org)
-- Netifaces
-- Twisted
 
 License
 =======
