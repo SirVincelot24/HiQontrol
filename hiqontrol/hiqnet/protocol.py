@@ -133,10 +133,10 @@ class FullyQualifiedAddress(object):
     object_address = None
 
     def __init__(self,
-                 device_address=None,
-                 vd_address=None,
-                 object_address=None,
-                 devicevdobject=None,
+                 device_address:int = None,
+                 vd_address:bytes=None,
+                 object_address:bytes=None,
+                 devicevdobject:bytes=None,
                  ):
         """Build a Fully Qualified HiQnet Address.
 
@@ -152,6 +152,9 @@ class FullyQualifiedAddress(object):
         :param object_address:  Object address
         :type object_address: bytearray 24 bits
         """
+        assert device_address is None or (0 < device_address <= 65535)
+        assert vd_address is None or len(vd_address) == 1 # 1 byte
+        assert object_address is None or len(object_address) == 3 # 3 bytes
         if devicevdobject:
             repr(devicevdobject)
             self.device_address = struct.unpack('!H', devicevdobject[0:2])[0]
