@@ -7,6 +7,8 @@ import binascii
 import re
 from os import environ
 
+from hiqnet.device import Device
+
 if environ.get('ANDROID_APP_PATH'):
     environ['PYTHON_EGG_CACHE'] = environ.get('ANDROID_APP_PATH')
 
@@ -151,7 +153,7 @@ class HiQNetAddressInput(TextInput):
 
 class Control(object):
     locate = False
-    source_device = None
+    source_device: Device = None
     udp_transport = None
     tcp_transport = None
 
@@ -180,6 +182,16 @@ class Control(object):
     def toggle_lr_state(self, is_pressed: bool):
         c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         message.multi_param_set(is_pressed)
+        c.sendto(message, "192.168.178.33")
+
+    def param_sub_all(self):
+        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        message.parameter_subscribe_all(self.source_device.hiqnet_address)
+        c.sendto(message, "192.168.178.33")
+
+    def get_attributes(self):
+        c, message = self.init(30850)
+        message.get_attributes()
         c.sendto(message, "192.168.178.33")
 
 
@@ -221,6 +233,8 @@ class HiQontrolApp(App):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
+        self.control.get_attributes()
+        self.control.param_sub_all()
 
     def on_pause(self):
         """Enable pause mode."""

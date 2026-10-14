@@ -631,7 +631,12 @@ class Command(object):
     def get_attributes(self):
         """Build a Get Attributes command."""
         self.message = Message(name='GETATTR')
-        raise NotImplementedError
+        self.payload = (b'\x00\x04' # Attribute Count
+                        b'\x00\x00' # Attribute ID: Class Name (0)
+                        b'\x00\x01' # Attribute ID: Name String (1)
+                        b'\x00\x04' # Attribute ID: Software Version (4)
+                        b'\x00\x17' # Attribute ID: Unknown (23)
+                        )
 
     def get_vd_list(self, workgroup=''):
         """Build a Get VD List command.
@@ -685,6 +690,18 @@ class Command(object):
         else:
             self.payload = b'\x00\x01\x00\x01\x04\x00\x00\x00\x00'
 
+    def parameter_subscribe_all(self, source_address):
+        """
+
+        :param source_address: 2bytes
+        :return:
+        """
+        self.message = Message(name='PARMSUBALL')
+        vdobject = b'\x01\x00\x00\x02'
+        subscription_type = b'\x05'
+        sensor_rate = b'\x00\x00'
+        subscription_flags = b'\x00\x01'
+        self.payload = struct.pack('!H', source_address) + vdobject + subscription_type + sensor_rate + subscription_flags
 
     def locate_on(self, serial_number):
         """Builds a locate command asking for the visual clue to be active.
