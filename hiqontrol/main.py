@@ -7,8 +7,6 @@ import binascii
 import re
 from os import environ
 
-from kivy.uix.togglebutton import ToggleButton
-
 if environ.get('ANDROID_APP_PATH'):
     environ['PYTHON_EGG_CACHE'] = environ.get('ANDROID_APP_PATH')
 
@@ -48,7 +46,8 @@ SI_IMPACT_SERIAL = b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x0
 
 APPNAME = 'HiQontrol'
 
-class ListLocateButton(ToggleButton):
+
+class ListLocateButton(Button):
     blinking = BooleanProperty(False)
     hiqnet_address = NumericProperty(0)
     ip_address = StringProperty("")
@@ -86,18 +85,11 @@ class ListLocateButton(ToggleButton):
             self.background_color[3],
         ]
 
-    def locate_toggle(self, hiqnet_dest, ip_dest, serial_dest):
-        is_pressed = self.state == "down"
-        print(is_pressed)
-        app = App.get_running_app()
-        app.locate_toggle(is_pressed, hiqnet_dest, ip_dest, serial_dest)
-
     def on_release(self):
         app = App.get_running_app()
 
         if app.control is not None:
             app.locate_toggle(
-                False,
                 self.hiqnet_address,
                 self.ip_address,
                 self.serial_number
@@ -158,6 +150,7 @@ class HiQNetAddressInput(TextInput):
 
 
 class Control(object):
+    locate = False
     source_device = None
     udp_transport = None
     tcp_transport = None
@@ -174,12 +167,14 @@ class Control(object):
         message = hiqnet.protocol.Command(source=source_address, destination=destination_address)
         return c, message
 
-    def locate_toggle(self, is_pressed:bool, hiqnet_dest, ip_dest, serial_dest):
+    def locate_toggle(self, hiqnet_dest, ip_dest, serial_dest):
         c, message = self.init(hiqnet_dest)
-        if not is_pressed:
+        if not self.locate:
             message.locate_on(serial_dest)
+            self.locate = True
         else:
             message.locate_off(serial_dest)
+            self.locate = False
         c.sendto(message, ip_dest)
 
     def toggle_lr_state(self, is_pressed: bool):
@@ -282,8 +277,8 @@ class HiQontrolApp(App):
     def get_local_gateway(self):
         return self.device.network_info.gateway_address
 
-    def locate_toggle(self,is_pressed:bool, hiqnet_dest, ip_dest, serial_dest):
-        self.control.locate_toggle(is_pressed, hiqnet_dest, ip_dest, serial_dest)
+    def locate_toggle(self, hiqnet_dest, ip_dest, serial_dest):
+        self.control.locate_toggle(hiqnet_dest, ip_dest, serial_dest)
 
     def toggle_lr_state(self, widget):
         is_pressed = widget.state == "down"

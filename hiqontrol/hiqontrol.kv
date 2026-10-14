@@ -50,8 +50,8 @@
         hiqnet_address: root.hiqnet_address
         ip_address: root.ip_address
         serial_number: app.serial_number
-        on_state:
-            self.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
+        on_press:
+            app.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
             self.toggle_blinking()
 
     ListMixButton:
@@ -62,7 +62,7 @@
 
 <ListLocateButton>
     on_press:
-        self.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
+        app.locate_toggle(self.hiqnet_address, self.ip_address, self.serial_number)
         self.toggle_blinking()
 
 # FIXME: there should really be a better way than parent[n] to get the topmost element
