@@ -157,7 +157,7 @@ class Device(object):
         :type name: str
         :param hiqnet_address: Address of the device
         :type hiqnet_address: int
-        :param network_info: Device's network informations
+        :param network_info: Device's network information
         :type network_info: NetworkInfo
         """
         self.manager = DeviceManager(name)

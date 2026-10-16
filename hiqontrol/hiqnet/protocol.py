@@ -129,7 +129,7 @@ class Message(object):
 class FullyQualifiedAddress(object):
     """Fully Qualified HiQnet Address."""
     device_address = None
-    vd_address = None
+    vd_address: bytes = None
     object_address = None
 
     def __init__(self,
@@ -159,7 +159,7 @@ class FullyQualifiedAddress(object):
             repr(devicevdobject)
             self.device_address = struct.unpack('!H', devicevdobject[0:2])[0]
             # TODO: make vd_address and object_address int rather than byte arrays
-            self.vd_address = devicevdobject[2]
+            self.vd_address = devicevdobject[2:3]
             self.object_address = devicevdobject[3:6]
         else:
             self.device_address = device_address
@@ -184,7 +184,7 @@ class FullyQualifiedAddress(object):
 
     def __str__(self):
         """Get the address in a printable format."""
-        return self.__bytes__()
+        return str(self.__bytes__())
 
     def __repr__(self):
         return str(self.device_address) + '.' + \
@@ -327,8 +327,8 @@ class Command(object):
         print("Real command length: ", len(command))
         if len(command) < MIN_HEADER_LEN:
             raise BufferError("Command too short")
-        self.version = struct.unpack('!B', command[0])[0]
-        self.headerlen = struct.unpack('!B', command[1])[0]
+        self.version = command[0]
+        self.headerlen = command[1]
         if len(command) < self.headerlen:
             raise BufferError("Command is smaller than it's header length")
         self.commandlen = struct.unpack('!L', command[2:6])[0]
@@ -339,19 +339,19 @@ class Command(object):
         self.message = Message(identifier=command[18:20])
         self.flags.asByte = struct.unpack('!H', command[20:22])[0]
         print("Flags: ", repr(self.flags))
-        self.hop_counter = struct.unpack('!B', command[22])[0]
+        self.hop_counter = command[22]
         self.sequence_number = struct.unpack('!H', command[23:25])[0]
         if self.headerlen > MIN_HEADER_LEN:
             index = MIN_HEADER_LEN
             # Optional Headers are present, check the flags
             if self.flags.error:
-                self.error_code = struct.unpack('!B', command[index])[0]
+                self.error_code = command[index]
                 index += 1
                 self.error_string = struct.unpack('s', command[index])[0]  # FIXME: detect string end
                 index += len(self.error_string)
                 raise NotImplementedError
             if self.flags.multipart:
-                self.start_seq_no = struct.unpack('!B', command[index])[0]
+                self.start_seq_no = command[index]
                 index += 1
                 self.bytes_remaining = struct.unpack('!L', command[index])[0]
                 index += 4
@@ -392,7 +392,7 @@ class Command(object):
         index += size
 
         print("Cost: ", end='')
-        print(struct.unpack('!B', self.payload[index])[0])
+        print(self.payload[index])
         index += 1
 
         # TODO: extract this algo as the "BLOCK" type
@@ -403,7 +403,7 @@ class Command(object):
         print("Serial number: ", end='')
         serial_number = ''
         while size:
-            serial_number += struct.unpack('!s', self.payload[index])[0]
+            serial_number += chr(self.payload[index])
             index += 1
             size -= 1
         print(serial_number)
@@ -419,7 +419,7 @@ class Command(object):
         index += size
 
         print("NetworkID: ", end='')
-        network_id = struct.unpack('!B', self.payload[index])[0]
+        network_id = self.payload[index]
         print(network_id)
         index += 1
 
@@ -430,7 +430,7 @@ class Command(object):
             mac_address = "%02x:%02x:%02x:%02x:%02x:%02x" % struct.unpack("!BBBBBB", self.payload[index:index + size])
             index += size
 
-            dhcp = bool(struct.unpack("B", self.payload[index])[0])
+            dhcp = bool(self.payload[index])
             index += 1
 
             size = 4

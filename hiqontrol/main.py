@@ -8,6 +8,7 @@ import re
 from os import environ
 
 from hiqnet.device import Device
+from hiqnet.protocol import FullyQualifiedAddress
 
 if environ.get('ANDROID_APP_PATH'):
     environ['PYTHON_EGG_CACHE'] = environ.get('ANDROID_APP_PATH')
@@ -194,6 +195,11 @@ class Control(object):
         message.get_attributes()
         c.sendto(message, "192.168.178.33")
 
+    def disco_info(self, broadcast:bool = False):
+        c, message = self.init(65535 if broadcast else 30850)
+        message.disco_info(self.source_device)
+        c.sendto(message, "192.168.178.33")
+
 
 class HiQontrol(ScreenManager):
     list = ObjectProperty()
@@ -233,8 +239,9 @@ class HiQontrolApp(App):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
-        self.control.get_attributes()
-        self.control.param_sub_all()
+        self.control.disco_info(broadcast=True)
+        #self.control.get_attributes()
+        #self.control.param_sub_all()
 
     def on_pause(self):
         """Enable pause mode."""
@@ -338,7 +345,14 @@ class HiQontrolApp(App):
         :type protocol: str
         :return:
         """
-        self.screen.debug.text = protocol + '(' + str(host) + ')' + binascii.hexlify(bytes(message))
+        if (message.message.name == "DISCOINFO" and
+                str(message.destination_address) == str(FullyQualifiedAddress.broadcast_address())):
+            self.control.disco_info()
+            print(message.destination_address)
+            print(FullyQualifiedAddress.broadcast_address())
+            print("DISCOINFO!!!!!")
+            pass
+        self.screen.debug.text = protocol + '(' + str(host) + ')' + str(binascii.hexlify(bytes(message)))
 
 if __name__ == '__main__':
     HiQontrolApp().run()
