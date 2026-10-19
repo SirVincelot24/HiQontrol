@@ -697,7 +697,7 @@ class Command(object):
         :return:
         """
         self.message = Message(name='PARMSUBALL')
-        vdobject = b'\x01\x00\x00\x02'
+        vdobject = b'\x01\x00\x00\xa6'
         subscription_type = b'\x05'
         sensor_rate = b'\x00\x00'
         subscription_flags = b'\x00\x01'

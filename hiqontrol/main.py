@@ -190,6 +190,12 @@ class Control(object):
         message.parameter_subscribe_all(self.source_device.hiqnet_address)
         c.sendto(message, "192.168.178.33")
 
+    def multi_param_sub(self):
+        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        # message.multi_param_subscribe([(b'\x00\x01', self.source_device.address, b'\x00\x01', b'\x00\x00')])
+        message.multi_param_subscribe([(1, self.source_device.address, 1, 0)])
+        c.sendto(message, "192.168.178.33")
+
     def get_attributes(self):
         c, message = self.init(30850)
         message.get_attributes()
@@ -241,7 +247,8 @@ class HiQontrolApp(App):
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
         self.control.disco_info(broadcast=True)
         #self.control.get_attributes()
-        #self.control.param_sub_all()
+        self.control.param_sub_all()
+        self.control.multi_param_sub()
 
     def on_pause(self):
         """Enable pause mode."""
@@ -345,13 +352,13 @@ class HiQontrolApp(App):
         :type protocol: str
         :return:
         """
-        if (message.message.name == "DISCOINFO" and
-                str(message.destination_address) == str(FullyQualifiedAddress.broadcast_address())):
-            self.control.disco_info()
-            print(message.destination_address)
-            print(FullyQualifiedAddress.broadcast_address())
-            print("DISCOINFO!!!!!")
-            pass
+        # if (message.message.name == "DISCOINFO" and
+        #         str(message.destination_address) == str(FullyQualifiedAddress.broadcast_address())):
+        #     self.control.disco_info()
+        #     print(message.destination_address)
+        #     print(FullyQualifiedAddress.broadcast_address())
+        #     print("DISCOINFO!!!!!")
+        #     pass
         self.screen.debug.text = protocol + '(' + str(host) + ')' + str(binascii.hexlify(bytes(message)))
 
 if __name__ == '__main__':
