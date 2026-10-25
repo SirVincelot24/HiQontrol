@@ -154,6 +154,10 @@ class MainWindow(QMainWindow):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
         self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.toggle_lr_state)
+        self.control.disco_info(broadcast=True)
+        # self.control.get_attributes()
+        self.control.param_sub_all()
+        self.control.multi_param_sub()
 
 
 if __name__ == '__main__':
