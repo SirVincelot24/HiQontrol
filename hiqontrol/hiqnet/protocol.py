@@ -770,7 +770,7 @@ class Command(object):
 
     def __str__(self):
         """Get the command in a printable form."""
-        return self.__bytes__()
+        return str(self.__bytes__())
 
     def __repr__(self):
         return vars(self)
