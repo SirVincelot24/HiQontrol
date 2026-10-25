@@ -181,9 +181,9 @@ class Control(object):
         c.sendto(message, ip_dest)
 
     def toggle_lr_state(self, is_pressed: bool):
-        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         message.multi_param_set(is_pressed)
-        c.sendto(message, "192.168.178.33")
+        c.sendto(message, SI_IMPACT_IP)
 
     def param_sub_all(self):
         c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
