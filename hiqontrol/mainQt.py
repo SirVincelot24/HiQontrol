@@ -36,7 +36,7 @@ class ButtonState(Enum):
     MUTED = 2
 
 
-class ChannelStrip(QDialog):
+class ChannelStrip(QWidget):
     channel_name: str = ""
     button_state: ButtonState = ButtonState.ON
 
