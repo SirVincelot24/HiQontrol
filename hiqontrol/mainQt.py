@@ -81,16 +81,16 @@ class ChannelStrip(QWidget):
 
 
 class MixerWidget(QWidget):
-    mixer_ip: str = "192.168.178.33"
+    mixer_ip: str
     mixer_device_address: int
     mixer_serial: bytes
 
     channel_strips: dict[str, ChannelStrip] = {}
 
     def __init__(self,
-                 mixer_ip: str = "192.168.178.33",
-                 mixer_device_address=30850,
-                 mixer_serial=b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x00\x00',
+                 mixer_ip: str = SI_IMPACT_IP,
+                 mixer_device_address=SI_IMPACT_DEVICE_ADDRESS,
+                 mixer_serial=SI_IMPACT_SERIAL,
                  parent=None):
         super(MixerWidget, self).__init__(parent)
         self.mixer_ip = mixer_ip
