@@ -117,12 +117,13 @@ class MainWindow(QMainWindow):
     device = None
     logger.info("Initializing MainWindow")
     try:
-        device_address = datastore.value('device_address', type=int)
-        if device_address is None:
+        device_address = int(datastore.value('device_address'))
+        device_name = str(datastore.value('device_name'))
+        if device_address is None or device_name is None:
             raise KeyError
-        device = hiqnet.device.Device(datastore.value('device_name', APPNAME, type=str), device_address)
+        device = hiqnet.device.Device(device_name, device_address)
         logger.info(f"Device '{device.name}' is connected")
-    except KeyError:
+    except KeyError, TypeError:
         logger.warning(APPNAME + ': Settings not found, will use sane defaults')
         device_name = APPNAME
         device = hiqnet.device.Device(device_name)
