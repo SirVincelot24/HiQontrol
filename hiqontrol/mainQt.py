@@ -102,6 +102,7 @@ class MixerWidget(QWidget):
         for i in range(5):
             self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}"))
 
+        self.add_channel_strip("PC", ChannelStrip("PC"))
         self.add_channel_strip("L & R", ChannelStrip("L & R"))
 
         self.setLayout(self.content_layout)
@@ -153,6 +154,11 @@ class MainWindow(QMainWindow):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
         self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.toggle_lr_state)
+        self.mixerWidget.channel_strips["PC"].state_changed.connect(lambda is_pressed: self.control.set_channel_state(
+            is_pressed,
+            object_address=b'\x00\x00\x15',
+            channel_param=b'\x41'
+        ))
         for i, channel_strip in enumerate(self.mixerWidget.channel_strips):
             if "CH" in channel_strip:
                 param = bytes([i+1])
