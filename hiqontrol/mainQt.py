@@ -13,7 +13,7 @@ from twisted.internet import asyncioreactor
 
 import hiqnet
 import soundcraft
-from main import Control
+from hiqnet.control import Control
 
 APPNAME = 'HiQontrol'
 on_rtd = environ.get('READTHEDOCS') == 'True'
