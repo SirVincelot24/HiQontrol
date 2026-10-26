@@ -682,13 +682,14 @@ class Command(object):
         serial_number_len = struct.pack('!H', len(serial_number))
         self.payload = time + serial_number_len + serial_number
 
-    def multi_param_set(self, value: bool):
-        """Build a MultiParamSet command."""
+    def multi_param_set(self, value: bool, param: bytes):
+        """Build a MultiParamSet command.
+        :param param: Form: b'\\x01' """
         self.message = Message(name='MULTPARMSET')
         if value:
-            self.payload = b'\x00\x01\x00\x01\x04\x00\x00\x00\x01'
+            self.payload = b'\x00\x01\x00' + param + b'\x04\x00\x00\x00\x01'
         else:
-            self.payload = b'\x00\x01\x00\x01\x04\x00\x00\x00\x00'
+            self.payload = b'\x00\x01\x00' + param + b'\x04\x00\x00\x00\x00'
 
     def parameter_subscribe_all(self, source_address):
         """

@@ -67,8 +67,7 @@ class ChannelStrip(QDialog):
     def toggle_btn_state(self):
         self.button_state = ButtonState.ON if self.button.isChecked() else ButtonState.OFF
         self.set_btn_color()
-        if self.channel_name == "L & R":
-            self.state_changed.emit(self.button_state == ButtonState.ON)
+        self.state_changed.emit(self.button_state == ButtonState.ON)
         logger.info(f"State of Channel '{self.channel_name}' set to {self.button_state}")
 
     def set_btn_color(self):
@@ -90,8 +89,8 @@ class MixerWidget(QWidget):
 
     def __init__(self,
                  mixer_ip: str = "192.168.178.33",
-                 mixer_device_address = 30850,
-                 mixer_serial = b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x00\x00',
+                 mixer_device_address=30850,
+                 mixer_serial=b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x00\x00',
                  parent=None):
         super(MixerWidget, self).__init__(parent)
         self.mixer_ip = mixer_ip
@@ -134,7 +133,6 @@ class MainWindow(QMainWindow):
     tcp_transport = None
     serial_number = SI_IMPACT_SERIAL  # FIXME get serial
 
-
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setWindowTitle("HiQontrol")
@@ -154,6 +152,14 @@ class MainWindow(QMainWindow):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
         self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.toggle_lr_state)
+        for i, channel_strip in enumerate(self.mixerWidget.channel_strips):
+            if "CH" in channel_strip:
+                param = bytes([i+1])
+                self.mixerWidget.channel_strips[channel_strip].state_changed.connect(
+                    lambda is_pressed, param=param: self.control.set_channel_state(
+                        is_pressed,
+                        object_address=b'\x00\x00\x15',
+                        channel_param=param))
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
         self.control.param_sub_all()

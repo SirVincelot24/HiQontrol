@@ -181,8 +181,14 @@ class Control(object):
         c.sendto(message, ip_dest)
 
     def toggle_lr_state(self, is_pressed: bool):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
-        message.multi_param_set(is_pressed)
+        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x02', channel_param=b'\x01')
+
+    def toggle_ch1_state(self, is_pressed: bool):
+        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x15', channel_param=b'\x01')
+
+    def set_channel_state(self, is_on: bool, object_address, channel_param):
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=object_address)
+        message.multi_param_set(is_on, channel_param)
         c.sendto(message, SI_IMPACT_IP)
 
     def param_sub_all(self):
