@@ -186,25 +186,25 @@ class Control(object):
         c.sendto(message, SI_IMPACT_IP)
 
     def param_sub_all(self):
-        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         message.parameter_subscribe_all(self.source_device.hiqnet_address)
-        c.sendto(message, "192.168.178.33")
+        c.sendto(message, SI_IMPACT_IP)
 
     def multi_param_sub(self):
-        c, message = self.init(30850, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         # message.multi_param_subscribe([(b'\x00\x01', self.source_device.address, b'\x00\x01', b'\x00\x00')])
         message.multi_param_subscribe([(1, self.source_device.address, 1, 0)])
-        c.sendto(message, "192.168.178.33")
+        c.sendto(message, SI_IMPACT_IP)
 
     def get_attributes(self):
-        c, message = self.init(30850)
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS)
         message.get_attributes()
-        c.sendto(message, "192.168.178.33")
+        c.sendto(message, SI_IMPACT_IP)
 
     def disco_info(self, broadcast:bool = False):
-        c, message = self.init(65535 if broadcast else 30850)
+        c, message = self.init(65535 if broadcast else SI_IMPACT_DEVICE_ADDRESS)
         message.disco_info(self.source_device)
-        c.sendto(message, "192.168.178.33")
+        c.sendto(message, SI_IMPACT_IP)
 
 
 class HiQontrol(ScreenManager):
