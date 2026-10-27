@@ -37,14 +37,25 @@ class ButtonState(Enum):
 
 
 class ChannelStrip(QWidget):
+    """
+    :param object_address: 3 Bytes
+    :param channel_param: 1 Byte
+    """
     channel_name: str = ""
     button_state: ButtonState = ButtonState.ON
+    object_address: bytes
+    channel_param: bytes
 
-    state_changed = Signal(bool)
+    state_changed = Signal(bool, bytes, bytes)
+    """
+    state_changed = Signal(is_pressed, object_address, channel_param)
+    """
 
-    def __init__(self, channel_name="", parent=None):
+    def __init__(self, channel_name="", object_address=b'\x00\x00\x15', channel_param=b'\x01', parent=None):
         super(ChannelStrip, self).__init__(parent)
         self.channel_name = channel_name
+        self.object_address = object_address
+        self.channel_param = channel_param
         # Create widgets
         self.name_label = QLabel(self.channel_name)
         self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -67,7 +78,7 @@ class ChannelStrip(QWidget):
     def toggle_btn_state(self):
         self.button_state = ButtonState.ON if self.button.isChecked() else ButtonState.OFF
         self.set_btn_color()
-        self.state_changed.emit(self.button_state == ButtonState.ON)
+        self.state_changed.emit(self.button_state == ButtonState.ON, self.object_address, self.channel_param)
         logger.info(f"State of Channel '{self.channel_name}' set to {self.button_state}")
 
     def set_btn_color(self):
@@ -100,10 +111,10 @@ class MixerWidget(QWidget):
         self.content_layout = QHBoxLayout()
 
         for i in range(5):
-            self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}"))
+            self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}", object_address=b'\x00\x00\x15', channel_param=bytes([i+1])))
 
-        self.add_channel_strip("PC", ChannelStrip("PC"))
-        self.add_channel_strip("L & R", ChannelStrip("L & R"))
+        self.add_channel_strip("PC", ChannelStrip("PC", object_address=b'\x00\x00\x15', channel_param=b'\x41'))
+        self.add_channel_strip("L & R", ChannelStrip("L & R", object_address=b'\x00\x00\x02', channel_param=b'\x01'))
 
         self.setLayout(self.content_layout)
 
@@ -153,20 +164,11 @@ class MainWindow(QMainWindow):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
-        self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.toggle_lr_state)
-        self.mixerWidget.channel_strips["PC"].state_changed.connect(lambda is_pressed: self.control.set_channel_state(
-            is_pressed,
-            object_address=b'\x00\x00\x15',
-            channel_param=b'\x41'
-        ))
+        self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.set_channel_state)
+        self.mixerWidget.channel_strips["PC"].state_changed.connect(self.control.set_channel_state)
         for i, channel_strip in enumerate(self.mixerWidget.channel_strips):
             if "CH" in channel_strip:
-                param = bytes([i+1])
-                self.mixerWidget.channel_strips[channel_strip].state_changed.connect(
-                    lambda is_pressed, param=param: self.control.set_channel_state(
-                        is_pressed,
-                        object_address=b'\x00\x00\x15',
-                        channel_param=param))
+                self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
         self.control.param_sub_all()
