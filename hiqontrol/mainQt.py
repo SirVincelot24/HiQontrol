@@ -5,15 +5,16 @@ from enum import Enum
 from os import environ
 
 from PySide6.QtCore import QSettings, Signal, QTimer
-from PySide6.QtGui import Qt
+from PySide6.QtGui import Qt, QIntValidator
 from PySide6.QtWidgets import (QPushButton, QApplication,
-                               QVBoxLayout, QDialog, QLabel, QHBoxLayout, QWidget, QSlider, QMainWindow)
+                               QVBoxLayout, QLabel, QHBoxLayout, QWidget, QSlider, QMainWindow, QLineEdit)
 from qasync import QEventLoop
 from twisted.internet import asyncioreactor
 
 import hiqnet
 import soundcraft
 from hiqnet.control import Control
+from hiqnet.protocol import FullyQualifiedAddress
 
 APPNAME = 'HiQontrol'
 on_rtd = environ.get('READTHEDOCS') == 'True'
@@ -63,6 +64,8 @@ class ChannelStrip(QWidget):
         self.button.setCheckable(True)
         self.button.setChecked(True)
         self.volume_slider = QSlider(Qt.Orientation.Vertical)
+        self.volume_test_box = QLineEdit()
+        self.volume_test_box.setValidator(QIntValidator())
 
         # Create layout and add widgets
         layout = QVBoxLayout()
@@ -70,6 +73,7 @@ class ChannelStrip(QWidget):
         layout.addWidget(self.name_label)
         layout.addWidget(self.button)
         layout.addWidget(self.volume_slider)
+        layout.addWidget(self.volume_test_box)
         # Set dialog layout
         self.setLayout(layout)
         self.button.clicked.connect(self.toggle_btn_state)
@@ -110,7 +114,7 @@ class MixerWidget(QWidget):
 
         self.content_layout = QHBoxLayout()
 
-        for i in range(5):
+        for i in range(10):
             self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}", object_address=b'\x00\x00\x15', channel_param=bytes([i+1])))
 
         self.add_channel_strip("PC", ChannelStrip("PC", object_address=b'\x00\x00\x15', channel_param=b'\x41'))
@@ -169,9 +173,14 @@ class MainWindow(QMainWindow):
         for i, channel_strip in enumerate(self.mixerWidget.channel_strips):
             if "CH" in channel_strip:
                 self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
+        self.mixerWidget.channel_strips["L & R"].volume_test_box.textEdited.connect(lambda text:
+                                        self.control.multi_param_set_int(int(text), b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
+
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
-        self.control.param_sub_all()
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x00'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x40'))
+
         self.control.multi_param_sub()
 
 

@@ -1,5 +1,7 @@
 import hiqnet
 from hiqnet.device import Device
+from hiqnet.protocol import FullyQualifiedAddress
+
 # from mainQt import SI_IMPACT_DEVICE_ADDRESS, SI_IMPACT_IP
 SI_IMPACT_IP = '192.168.178.33'
 SI_IMPACT_DEVICE_ADDRESS = 30850
@@ -38,14 +40,19 @@ class Control(object):
     def toggle_ch1_state(self, is_pressed: bool):
         self.set_channel_state(is_pressed, object_address=b'\x00\x00\x15', channel_param=b'\x01')
 
-    def set_channel_state(self, is_on: bool, object_address, channel_param):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=object_address)
-        message.multi_param_set(is_on, channel_param)
+    def multi_param_set_int(self, value: int, param_id: bytes, destination: FullyQualifiedAddress):
+        c, message = self.init(destination.device_address, destination.vd_address, destination.object_address)
+        message.multi_param_set_int(value, param_id)
         c.sendto(message, SI_IMPACT_IP)
 
-    def param_sub_all(self):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
-        message.parameter_subscribe_all(self.source_device.hiqnet_address)
+    def set_channel_state(self, is_on: bool, object_address, channel_param):
+        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=object_address)
+        message.multi_param_set_bool(is_on, channel_param)
+        c.sendto(message, SI_IMPACT_IP)
+
+    def param_sub_all(self, destination_address: FullyQualifiedAddress):
+        c, message = self.init(destination_address.device_address, destination_address.vd_address, destination_address.object_address)
+        message.parameter_subscribe_all(self.source_device.hiqnet_address, destination_address.vd_address, destination_address.object_address)
         c.sendto(message, SI_IMPACT_IP)
 
     def multi_param_sub(self):

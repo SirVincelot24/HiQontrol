@@ -10,6 +10,8 @@ import os
 import socket
 import binascii
 
+from typing_extensions import overload
+
 from .flags import *
 from .networkinfo import *
 
@@ -691,18 +693,29 @@ class Command(object):
         else:
             self.payload = b'\x00\x01\x00' + param + b'\x04\x00\x00\x00\x00'
 
-    def parameter_subscribe_all(self, source_address):
+    def multi_param_set_int(self, value: int, param_id: bytes):
         """
 
-        :param source_address: 2bytes
+        :param value: 4 Bytes
+        :param param_id: 2 bytes
+        :return:
+        """
+        self.message = Message(name='MULTPARMSET')
+        self.payload = b'\x00\x01' + param_id + b'\x04' + struct.pack('!i', value)
+
+    def parameter_subscribe_all(self, source_address: int, vd_address: bytes, object_address: bytes):
+        """
+
+        :param source_address: 2 bytes
+        :param vd_address: 1 byte b'\x01'
+        :param object_address: 3 bytes b'\x00\x00\xa6'
         :return:
         """
         self.message = Message(name='PARMSUBALL')
-        vdobject = b'\x01\x00\x00\xa6'
         subscription_type = b'\x05'
         sensor_rate = b'\x00\x00'
         subscription_flags = b'\x00\x01'
-        self.payload = struct.pack('!H', source_address) + vdobject + subscription_type + sensor_rate + subscription_flags
+        self.payload = struct.pack('!H', source_address) + vd_address + object_address + subscription_type + sensor_rate + subscription_flags
 
     def locate_on(self, serial_number):
         """Builds a locate command asking for the visual clue to be active.
