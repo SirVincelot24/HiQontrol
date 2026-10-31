@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import struct
 import sys
 from enum import Enum
 from os import environ
@@ -52,7 +53,7 @@ class ChannelStrip(QWidget):
     state_changed = Signal(is_pressed, object_address, channel_param)
     """
 
-    def __init__(self, channel_name="", object_address=b'\x00\x00\x15', channel_param=b'\x01', parent=None):
+    def __init__(self, channel_name="", object_address=b'\x00\x00\x15', channel_param=b'\x00\x01', parent=None):
         super(ChannelStrip, self).__init__(parent)
         self.channel_name = channel_name
         self.object_address = object_address
@@ -115,10 +116,10 @@ class MixerWidget(QWidget):
         self.content_layout = QHBoxLayout()
 
         for i in range(10):
-            self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}", object_address=b'\x00\x00\x15', channel_param=bytes([i+1])))
+            self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}", object_address=b'\x00\x00\x15', channel_param=struct.pack("!H", i+1)))
 
-        self.add_channel_strip("PC", ChannelStrip("PC", object_address=b'\x00\x00\x15', channel_param=b'\x41'))
-        self.add_channel_strip("L & R", ChannelStrip("L & R", object_address=b'\x00\x00\x02', channel_param=b'\x01'))
+        self.add_channel_strip("PC", ChannelStrip("PC", object_address=b'\x00\x00\x15', channel_param=b'\x00\x41'))
+        self.add_channel_strip("L & R", ChannelStrip("L & R", object_address=b'\x00\x00\x02', channel_param=b'\x00\x01'))
 
         self.setLayout(self.content_layout)
 

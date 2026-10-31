@@ -35,10 +35,10 @@ class Control(object):
         c.sendto(message, ip_dest)
 
     def toggle_lr_state(self, is_pressed: bool):
-        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x02', channel_param=b'\x01')
+        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x02', channel_param=b'\x00\x01')
 
     def toggle_ch1_state(self, is_pressed: bool):
-        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x15', channel_param=b'\x01')
+        self.set_channel_state(is_pressed, object_address=b'\x00\x00\x15', channel_param=b'\x00\x01')
 
     def multi_param_set_int(self, value: int, param_id: bytes, destination: FullyQualifiedAddress):
         c, message = self.init(destination.device_address, destination.vd_address, destination.object_address)
