@@ -171,8 +171,8 @@ class MainWindow(QMainWindow):
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
         for channel_strip in self.mixerWidget.channel_strips:
             self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
-        self.mixerWidget.channel_strips["L & R"].volume_test_box.textEdited.connect(lambda text:
-                                        self.control.multi_param_set_int(int(text), b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
+        self.mixerWidget.channel_strips["L & R"].volume_test_box.editingFinished.connect(lambda:
+                                        self.control.multi_param_set_int(int(self.mixerWidget.channel_strips["L & R"].volume_test_box.text()), b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
 
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
