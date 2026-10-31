@@ -168,11 +168,8 @@ class MainWindow(QMainWindow):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
-        self.mixerWidget.channel_strips["L & R"].state_changed.connect(self.control.set_channel_state)
-        self.mixerWidget.channel_strips["PC"].state_changed.connect(self.control.set_channel_state)
-        for i, channel_strip in enumerate(self.mixerWidget.channel_strips):
-            if "CH" in channel_strip:
-                self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
+        for channel_strip in self.mixerWidget.channel_strips:
+            self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
         self.mixerWidget.channel_strips["L & R"].volume_test_box.textEdited.connect(lambda text:
                                         self.control.multi_param_set_int(int(text), b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
 
