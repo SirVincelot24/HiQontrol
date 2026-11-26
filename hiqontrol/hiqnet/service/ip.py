@@ -6,7 +6,7 @@ from __future__ import print_function
 __author__ = 'Raphaël Doursenaud'
 
 import binascii
-from mainQt import logger
+import logging
 from twisted.internet import protocol
 from twisted.internet.interfaces import IAddress
 
@@ -14,6 +14,7 @@ from ..protocol import Command
 
 PORT = 3804  # IANA declared as IQnet. Go figure.
 
+logger = logging.getLogger(__name__)
 
 class Connection(object):
     """Handles HiQnet IP connection.
@@ -50,8 +51,8 @@ class Connection(object):
         else:
             # noinspection PyArgumentList
             self.udp_transport.write(bytes(command), (destination, PORT))
-        logger.info("=>")  # DEBUG
-        logger.info(vars(command))  # DEBUG
+        logger.debug("=>")  # DEBUG
+        logger.debug(vars(command))  # DEBUG
 
 class TCPProtocol(protocol.Protocol):
     """HiQnet Twisted TCP protocol."""
@@ -70,7 +71,7 @@ class TCPProtocol(protocol.Protocol):
         """Called when data is received.
 
         :param data: Received binary data
-        :type data: bytearray
+        :type data: bytes
         """
         # FIXME: debugging output should go into a logger
         logger.debug("<=")
@@ -96,11 +97,11 @@ class UDPProtocol(protocol.DatagramProtocol):
         self.transport.setBroadcastAllowed(True)  # Some messages need to be broadcasted
         self.app.udp_transport = self.transport
 
-    def datagramReceived(self, data, addr):
+    def datagramReceived(self, datagram, addr):
         """Called when data is received.
 
-        :param data: Received binary data
-        :type data: bytearray
+        :param datagram: Received binary data
+        :type datagram: bytes
         :param addr: IPv4 address and port of the sender
         :type addr: tuple
         """
@@ -109,12 +110,12 @@ class UDPProtocol(protocol.DatagramProtocol):
         # FIXME: debugging output should go into a logger
         logger.debug("<=")
         logger.debug(self.name + "data:")
-        logger.debug(binascii.hexlify(data))
+        logger.debug(binascii.hexlify(datagram))
         logger.debug("from ", end="")
         logger.debug(host, end="")
         logger.debug(":", end="")
         logger.debug(port)
-        command = Command(command=data)
+        command = Command(command=datagram)
         logger.debug(vars(command))  # DEBUG
 
         # TODO: Process some more :)
