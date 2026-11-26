@@ -64,9 +64,13 @@ class ChannelStrip(QWidget):
         self.button = QPushButton("ON")
         self.button.setCheckable(True)
         self.button.setChecked(True)
-        self.volume_slider = QSlider(Qt.Orientation.Vertical)
+        self.volume_slider = QSlider(Qt.Orientation.Vertical, tickPosition=QSlider.TickPosition.TicksBothSides)
+        self.volume_slider.setMinimum(-8832)
+        self.volume_slider.setMaximum(640)
+        self.volume_slider.valueChanged.connect(lambda value: self.volume_test_box.setText(str(value)))
         self.volume_test_box = QLineEdit()
-        self.volume_test_box.setValidator(QIntValidator())
+        self.volume_test_box.setValidator(QIntValidator(bottom=-8832, top=640))
+        self.volume_set_btn = QPushButton("Set Fader Volume")
 
         # Create layout and add widgets
         layout = QVBoxLayout()
@@ -75,6 +79,7 @@ class ChannelStrip(QWidget):
         layout.addWidget(self.button)
         layout.addWidget(self.volume_slider)
         layout.addWidget(self.volume_test_box)
+        layout.addWidget(self.volume_set_btn)
         # Set dialog layout
         self.setLayout(layout)
         self.button.clicked.connect(self.toggle_btn_state)
@@ -191,8 +196,9 @@ class MainWindow(QMainWindow):
 
         for channel_strip in self.mixerWidget.channel_strips:
             self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
-        self.mixerWidget.channel_strips["L & R"].volume_test_box.editingFinished.connect(lambda:
-                                        self.control.multi_param_set_int(int(self.mixerWidget.channel_strips["L & R"].volume_test_box.text()), b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
+        self.mixerWidget.channel_strips["L & R"].volume_set_btn.clicked.connect(lambda:
+                            self.control.multi_param_set_int(int(self.mixerWidget.channel_strips["L & R"].volume_test_box.text()),
+                            b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
 
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
