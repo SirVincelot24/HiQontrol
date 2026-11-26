@@ -6,7 +6,9 @@ from __future__ import print_function
 __author__ = 'Raphaël Doursenaud'
 
 import binascii
+from mainQt import logger
 from twisted.internet import protocol
+from twisted.internet.interfaces import IAddress
 
 from ..protocol import Command
 
@@ -48,19 +50,20 @@ class Connection(object):
         else:
             # noinspection PyArgumentList
             self.udp_transport.write(bytes(command), (destination, PORT))
-        print("=>")  # DEBUG
-        print(vars(command))  # DEBUG
+        logger.info("=>")  # DEBUG
+        logger.info(vars(command))  # DEBUG
 
-
-# noinspection PyClassHasNoInit
 class TCPProtocol(protocol.Protocol):
     """HiQnet Twisted TCP protocol."""
 
     name = "HiQnetTCP"
 
-    # noinspection PyPep8Naming
-    def startProtocol(self):
-        """Called after protocol started listening."""
+    def __init__(self):
+        print("DEBUG init in protocol")
+
+    def connectionMade(self):
+        """is called after protocol started listening."""
+        print("DEBBUG connectionMade in protocol")
         self.factory.app.tcp_transport = self.transport
 
     def dataReceived(self, data):
@@ -70,11 +73,11 @@ class TCPProtocol(protocol.Protocol):
         :type data: bytearray
         """
         # FIXME: debugging output should go into a logger
-        print("<=")
-        print(self.name + " data:")
-        print(binascii.hexlify(data))
+        logger.info("<=")
+        logger.info(self.name + " data:")
+        logger.info(binascii.hexlify(data))
         command = Command(command=data)
-        print(vars(command))  # DEBUG
+        logger.info(vars(command))  # DEBUG
 
         # TODO: Process some more :)
         self.factory.app.handle_message(command, None, self.name)
@@ -90,7 +93,7 @@ class UDPProtocol(protocol.DatagramProtocol):
 
     def startProtocol(self):
         """Called after protocol started listening."""
-        self.transport.setBroadcastAllowed(True)  # Some messages needs to be broadcasted
+        self.transport.setBroadcastAllowed(True)  # Some messages need to be broadcasted
         self.app.udp_transport = self.transport
 
     def datagramReceived(self, data, addr):
@@ -104,15 +107,15 @@ class UDPProtocol(protocol.DatagramProtocol):
         (host, port) = addr
 
         # FIXME: debugging output should go into a logger
-        print("<=")
-        print(self.name + "data:")
-        print(binascii.hexlify(data))
-        print("from ", end="")
-        print(host, end="")
-        print(":", end="")
-        print(port)
+        logger.debug("<=")
+        logger.debug(self.name + "data:")
+        logger.debug(binascii.hexlify(data))
+        logger.debug("from ", end="")
+        logger.debug(host, end="")
+        logger.debug(":", end="")
+        logger.debug(port)
         command = Command(command=data)
-        print(vars(command))  # DEBUG
+        logger.debug(vars(command))  # DEBUG
 
         # TODO: Process some more :)
         self.app.handle_message(command, host, self.name)
@@ -125,3 +128,9 @@ class Factory(protocol.Factory):
 
     def __init__(self, app):
         self.app = app
+
+    def buildProtocol(self, addr: IAddress | None):
+        return TCPProtocol()
+
+    def startFactory(self):
+        print(f"startFactory with app {self.app}")
