@@ -7,8 +7,8 @@ __author__ = 'Raphaël Doursenaud'
 
 import binascii
 import logging
+
 from twisted.internet import protocol
-from twisted.internet.interfaces import IAddress
 
 from ..protocol import Command
 
@@ -46,8 +46,7 @@ class Connection(object):
         """
         if command.flags.guaranteed:
             # Send TCP message if the Guaranteed flag is set
-            # noinspection PyArgumentList
-            self.tcp_transport.write(bytes(command), (destination, PORT))
+            self.tcp_transport.write(bytes(command))
         else:
             # noinspection PyArgumentList
             self.udp_transport.write(bytes(command), (destination, PORT))
@@ -59,13 +58,11 @@ class TCPProtocol(protocol.Protocol):
 
     name = "HiQnetTCP"
 
-    def __init__(self):
-        print("DEBUG init in protocol")
-
     def connectionMade(self):
         """is called after protocol started listening."""
-        print("DEBBUG connectionMade in protocol")
+        logger.info("Mixer Connected!")
         self.factory.app.tcp_transport = self.transport
+        self.factory.app.on_tcp_connected(self.transport)
 
     def dataReceived(self, data):
         """Called when data is received.
@@ -73,7 +70,6 @@ class TCPProtocol(protocol.Protocol):
         :param data: Received binary data
         :type data: bytes
         """
-        # FIXME: debugging output should go into a logger
         logger.debug("<=")
         logger.debug(self.name + " data:")
         logger.debug(binascii.hexlify(data))
@@ -129,9 +125,6 @@ class Factory(protocol.Factory):
 
     def __init__(self, app):
         self.app = app
-
-    def buildProtocol(self, addr: IAddress | None):
-        return TCPProtocol()
 
     def startFactory(self):
         print(f"startFactory with app {self.app}")

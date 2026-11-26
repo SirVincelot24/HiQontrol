@@ -6,6 +6,7 @@ from __future__ import print_function
 __author__ = 'Raphaël Doursenaud'
 
 import itertools
+import logging
 import os
 import socket
 import binascii
@@ -28,6 +29,8 @@ DEFAULT_FLAG_MASK = b'\x01\xff'
 SUPPORTED_FLAG_MASK = DEFAULT_FLAG_MASK
 
 DEFAULT_KEEPALIVE = 10000  # ms
+
+logger = logging.getLogger(__name__)
 
 
 class Message(object):
@@ -326,7 +329,7 @@ class Command(object):
 
         :param command: The binary command to decode
         """
-        print("Real command length: ", len(command))
+        logger.debug("Real command length: " + str(len(command)))
         if len(command) < MIN_HEADER_LEN:
             raise BufferError("Command too short")
         self.version = command[0]
@@ -340,7 +343,7 @@ class Command(object):
         self.destination_address = FullyQualifiedAddress(devicevdobject=command[12:18])
         self.message = Message(identifier=command[18:20])
         self.flags.asByte = struct.unpack('!H', command[20:22])[0]
-        print("Flags: ", repr(self.flags))
+        logger.debug("Flags: " + repr(self.flags))
         self.hop_counter = command[22]
         self.sequence_number = struct.unpack('!H', command[23:25])[0]
         if self.headerlen > MIN_HEADER_LEN:
@@ -713,7 +716,7 @@ class Command(object):
         :return:
         """
         self.message = Message(name='PARMSUBALL')
-        # self.flags.guaranteed = 1
+        self.flags.guaranteed = 1
         subscription_type = b'\x05'
         sensor_rate = b'\x00\x00'
         subscription_flags = b'\x00\x01'

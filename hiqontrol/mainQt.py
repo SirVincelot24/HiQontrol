@@ -165,6 +165,7 @@ class MainWindow(QMainWindow):
 
         self.setCentralWidget(self.mixerWidget)
 
+        # noinspection bad-argument-type
         reactor.listenTCP(hiqnet.service.ip.PORT, hiqnet.service.ip.Factory(self))
         reactor.listenUDP(hiqnet.service.ip.PORT, hiqnet.service.ip.UDPProtocol(self))
         reactor.listenUDP(soundcraft.ip.VUMETER_IP_PORT, soundcraft.ip.VuMeterUDPPRotocol(self))
@@ -174,26 +175,6 @@ class MainWindow(QMainWindow):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport, self.mixerWidget.mixer_ip, self.mixerWidget.mixer_device_address)
-        logger.debug(self.control.tcp_transport)
-        logger.debug(self.control.udp_transport)
-        # self.control.hello(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS))
-
-
-
-
-
-
-
-        # TODO: TCP Connection!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, sonst geht paramsub nicht
-
-
-
-
-
-
-
-
-
         for channel_strip in self.mixerWidget.channel_strips:
             self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
         self.mixerWidget.channel_strips["L & R"].volume_set_btn.clicked.connect(lambda:
@@ -201,6 +182,11 @@ class MainWindow(QMainWindow):
                             b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
 
         self.control.disco_info(broadcast=True)
+
+    def on_tcp_connected(self, transport):
+        """Send all the parameter subscribe requests"""
+        self.tcp_transport = transport
+        self.control.tcp_transport = transport
         # self.control.get_attributes()
         self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x00'))
         self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x01'))
@@ -211,6 +197,26 @@ class MainWindow(QMainWindow):
 
         # self.control.multi_param_sub()
 
+    def handle_message(self, message, host, protocol):
+        """Handle messages received from twisted servers.
+
+        Do nothing for debugging right now
+
+        :param message: HiQnet message
+        :type message: hiqnet.protocol.Command
+        :param host: IPv4 host address
+        :param protocol: Protocol that received
+        :type protocol: str
+        :return:
+        """
+        # if (message.message.name == "DISCOINFO" and
+        #         str(message.destination_address) == str(FullyQualifiedAddress.broadcast_address())):
+        #     self.control.disco_info()
+        #     print(message.destination_address)
+        #     print(FullyQualifiedAddress.broadcast_address())
+        #     print("DISCOINFO!!!!!")
+        #     pass
+        # logger.debug(protocol + '(' + str(host) + ')' + str(binascii.hexlify(bytes(message))))
 
 if __name__ == '__main__':
     # Create the Qt Application
