@@ -2,20 +2,18 @@ import hiqnet
 from hiqnet.device import Device
 from hiqnet.protocol import FullyQualifiedAddress
 
-# from mainQt import SI_IMPACT_DEVICE_ADDRESS, SI_IMPACT_IP
-SI_IMPACT_IP = '192.168.178.33'
-SI_IMPACT_DEVICE_ADDRESS = 30850
-
 class Control(object):
     locate = False
     source_device: Device = None
     udp_transport = None
     tcp_transport = None
 
-    def __init__(self, source_device, udp_transport, tcp_transport):
+    def __init__(self, source_device, udp_transport, tcp_transport, ip_address, hiqnet_address):
         self.source_device = source_device
         self.udp_transport = udp_transport
         self.tcp_transport = tcp_transport
+        self.ip_address = ip_address
+        self.hiqnet_address = hiqnet_address
 
     def init(self, hiqnet_dest, vd_address: bytes = None, object_address: bytes = None):
         c = hiqnet.service.ip.Connection(self.udp_transport, self.tcp_transport)
@@ -43,35 +41,35 @@ class Control(object):
     def multi_param_set_int(self, value: int, param_id: bytes, destination: FullyQualifiedAddress):
         c, message = self.init(destination.device_address, destination.vd_address, destination.object_address)
         message.multi_param_set_int(value, param_id)
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def set_channel_state(self, is_on: bool, object_address, channel_param):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=object_address)
+        c, message = self.init(self.hiqnet_address, vd_address=b'\x01', object_address=object_address)
         message.multi_param_set_bool(is_on, channel_param)
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def param_sub_all(self, destination_address: FullyQualifiedAddress):
         c, message = self.init(destination_address.device_address, destination_address.vd_address, destination_address.object_address)
         message.parameter_subscribe_all(self.source_device.hiqnet_address, destination_address.vd_address, destination_address.object_address)
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def hello(self, destination_address: FullyQualifiedAddress):
         c, message = self.init(destination_address.device_address, destination_address.vd_address, destination_address.object_address)
         message.hello()
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def multi_param_sub(self):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
+        c, message = self.init(self.hiqnet_address, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         # message.multi_param_subscribe([(b'\x00\x01', self.source_device.address, b'\x00\x01', b'\x00\x00')])
         message.multi_param_subscribe([(1, self.source_device.address, 1, 0)])
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def get_attributes(self):
-        c, message = self.init(SI_IMPACT_DEVICE_ADDRESS)
+        c, message = self.init(self.hiqnet_address)
         message.get_attributes()
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)
 
     def disco_info(self, broadcast:bool = False):
-        c, message = self.init(65535 if broadcast else SI_IMPACT_DEVICE_ADDRESS)
+        c, message = self.init(65535 if broadcast else self.hiqnet_address)
         message.disco_info(self.source_device)
-        c.sendto(message, SI_IMPACT_IP)
+        c.sendto(message, self.ip_address)

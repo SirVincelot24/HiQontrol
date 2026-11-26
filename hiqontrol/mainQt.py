@@ -161,7 +161,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("HiQontrol")
 
         self.mixerWidget = MixerWidget(mixer_ip=SI_IMPACT_IP, mixer_device_address=SI_IMPACT_DEVICE_ADDRESS,
-                                       mixer_serial=SI_IMPACT_SERIAL)
+                                       mixer_serial=self.serial_number)
 
         self.setCentralWidget(self.mixerWidget)
 
@@ -173,7 +173,7 @@ class MainWindow(QMainWindow):
 
     def on_start(self):
         """Initialize device and network communications."""
-        self.control = Control(self.device, self.udp_transport, self.tcp_transport)
+        self.control = Control(self.device, self.udp_transport, self.tcp_transport, self.mixerWidget.mixer_ip, self.mixerWidget.mixer_device_address)
         logger.debug(self.control.tcp_transport)
         logger.debug(self.control.udp_transport)
         # self.control.hello(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS))
