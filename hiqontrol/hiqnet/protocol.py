@@ -563,7 +563,7 @@ class Command(object):
                 return session_number
 
     def hello(self, session_number=None):
-        """Build an hello command.
+        """Build a hello command.
 
         Starts a session.
 
@@ -713,10 +713,16 @@ class Command(object):
         :return:
         """
         self.message = Message(name='PARMSUBALL')
+        # self.flags.guaranteed = 1
         subscription_type = b'\x05'
         sensor_rate = b'\x00\x00'
         subscription_flags = b'\x00\x01'
         self.payload = struct.pack('!H', source_address) + vd_address + object_address + subscription_type + sensor_rate + subscription_flags
+
+    def sub_event_log_msgs(self):
+        """Build a sub_event_log_msgs command."""
+        self.message = Message(name='SUBEVTLOGMSGS')
+        self.payload = b'\xff\xff\xff\xff\xff\xff'
 
     def locate_on(self, serial_number):
         """Builds a locate command asking for the visual clue to be active.
