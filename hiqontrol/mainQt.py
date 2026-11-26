@@ -23,7 +23,7 @@ SI_IMPACT_IP = '192.168.178.33'
 SI_IMPACT_DEVICE_ADDRESS = 30850
 SI_IMPACT_SERIAL = b'\x53\x69\x49\x6d\x70\x61\x63\x74\x38\x32\x37\x38\x38\x32\x00\x00'
 
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s [%(levelname)s] %(name)s: %(message)s',
                     handlers=[
                         logging.StreamHandler(),
@@ -145,7 +145,7 @@ class MainWindow(QMainWindow):
             raise KeyError
         device = hiqnet.device.Device(device_name, device_address)
         logger.info(f"Device '{device.name}' is connected")
-    except KeyError, TypeError:
+    except (KeyError, TypeError):
         logger.warning(APPNAME + ': Settings not found, will use sane defaults')
         device_name = APPNAME
         device = hiqnet.device.Device(device_name)

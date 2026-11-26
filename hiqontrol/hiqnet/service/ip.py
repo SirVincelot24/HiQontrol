@@ -73,11 +73,11 @@ class TCPProtocol(protocol.Protocol):
         :type data: bytearray
         """
         # FIXME: debugging output should go into a logger
-        logger.info("<=")
-        logger.info(self.name + " data:")
-        logger.info(binascii.hexlify(data))
+        logger.debug("<=")
+        logger.debug(self.name + " data:")
+        logger.debug(binascii.hexlify(data))
         command = Command(command=data)
-        logger.info(vars(command))  # DEBUG
+        logger.debug(vars(command))  # DEBUG
 
         # TODO: Process some more :)
         self.factory.app.handle_message(command, None, self.name)
