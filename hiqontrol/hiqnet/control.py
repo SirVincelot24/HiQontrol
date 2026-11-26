@@ -55,6 +55,11 @@ class Control(object):
         message.parameter_subscribe_all(self.source_device.hiqnet_address, destination_address.vd_address, destination_address.object_address)
         c.sendto(message, SI_IMPACT_IP)
 
+    def hello(self, destination_address: FullyQualifiedAddress):
+        c, message = self.init(destination_address.device_address, destination_address.vd_address, destination_address.object_address)
+        message.hello()
+        c.sendto(message, SI_IMPACT_IP)
+
     def multi_param_sub(self):
         c, message = self.init(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')
         # message.multi_param_subscribe([(b'\x00\x01', self.source_device.address, b'\x00\x01', b'\x00\x00')])

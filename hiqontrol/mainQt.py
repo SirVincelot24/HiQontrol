@@ -169,6 +169,26 @@ class MainWindow(QMainWindow):
     def on_start(self):
         """Initialize device and network communications."""
         self.control = Control(self.device, self.udp_transport, self.tcp_transport)
+        logger.debug(self.control.tcp_transport)
+        logger.debug(self.control.udp_transport)
+        # self.control.hello(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS))
+
+
+
+
+
+
+
+        # TODO: TCP Connection!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!, sonst geht paramsub nicht
+
+
+
+
+
+
+
+
+
         for channel_strip in self.mixerWidget.channel_strips:
             self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
         self.mixerWidget.channel_strips["L & R"].volume_test_box.editingFinished.connect(lambda:
@@ -177,9 +197,13 @@ class MainWindow(QMainWindow):
         self.control.disco_info(broadcast=True)
         # self.control.get_attributes()
         self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x00'))
-        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x40'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x01'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x15'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x42'))
+        self.control.param_sub_all(FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x3e'))
 
-        self.control.multi_param_sub()
+        # self.control.multi_param_sub()
 
 
 if __name__ == '__main__':
