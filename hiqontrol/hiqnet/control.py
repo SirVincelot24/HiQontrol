@@ -69,7 +69,7 @@ class Control(object):
         message.get_attributes()
         c.sendto(message, self.ip_address)
 
-    def disco_info(self, broadcast:bool = False):
+    def disco_info(self, broadcast:bool = False, ip_address: str | None = None):
         c, message = self.init(65535 if broadcast else self.hiqnet_address)
         message.disco_info(self.source_device)
-        c.sendto(message, self.ip_address)
+        c.sendto(message, ip_address or self.ip_address)
