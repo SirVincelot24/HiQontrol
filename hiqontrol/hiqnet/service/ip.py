@@ -107,10 +107,7 @@ class UDPProtocol(protocol.DatagramProtocol):
         logger.debug("<=")
         logger.debug(self.name + "data:")
         logger.debug(binascii.hexlify(datagram))
-        logger.debug("from ", end="")
-        logger.debug(host, end="")
-        logger.debug(":", end="")
-        logger.debug(port)
+        logger.debug("from " + str(host) + ":" + str(port))
         command = Command(command=datagram)
         logger.debug(vars(command))  # DEBUG
 

@@ -79,10 +79,10 @@ if __name__ == '__main__':
     message.disco_info(device=my_device)
     c.sendto(message)
 
-    destination_address = hiqnet.protocol.FullyQualifiedAddress(device_address=SI_COMPACT_16_DEVICE_ADDRESS)
-    message = hiqnet.protocol.Command(source=source_address, destination=destination_address)
-    message.hello()
-    c.sendto(message)
+    # destination_address = hiqnet.protocol.FullyQualifiedAddress(device_address=SI_COMPACT_16_DEVICE_ADDRESS)
+    # message = hiqnet.protocol.Command(source=source_address, destination=destination_address)
+    # message.hello()
+    # c.sendto(message)
 
     destination_address = hiqnet.protocol.FullyQualifiedAddress(device_address=SI_COMPACT_16_DEVICE_ADDRESS)
     message = hiqnet.protocol.Command(source=source_address, destination=destination_address)
