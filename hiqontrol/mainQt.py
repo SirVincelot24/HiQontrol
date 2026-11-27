@@ -3,6 +3,7 @@ import logging
 import math
 import struct
 import sys
+from argparse import ArgumentError
 from enum import Enum
 from os import environ
 
@@ -39,26 +40,46 @@ class ButtonState(Enum):
     MUTED = 2
 
 
+class ChannelType(Enum):
+    MixerChannel = 0
+    MixBus = 1
+    MatrixBus = 2
+    MasterBus = 3
+    VCA = 4
+
 class ChannelStrip(QWidget):
     """
-    :param object_address: 3 Bytes
-    :param channel_param: 1 Byte
+    see godot implementation for the numbers
     """
     channel_name: str = ""
     button_state: ButtonState = ButtonState.ON
     object_address: bytes
-    channel_param: bytes
+    channel_id: int
+    channel_type: ChannelType
 
     state_changed = Signal(bool, bytes, bytes)
     """
     state_changed = Signal(is_pressed, object_address, channel_param)
     """
 
-    def __init__(self, channel_name="", object_address=b'\x00\x00\x15', channel_param=b'\x00\x01', parent=None):
+    def __init__(self, channel_name, channel_type = ChannelType.MixerChannel, channel_id = 1, parent=None):
         super(ChannelStrip, self).__init__(parent)
         self.channel_name = channel_name
-        self.object_address = object_address
-        self.channel_param = channel_param
+        match channel_type:
+            case ChannelType.MixerChannel:
+                self.object_address = b'\x00\x00\x15' # 0.0.21
+            case ChannelType.MasterBus:
+                self.object_address = b'\x00\x00\x02' # 0.0.2
+            case ChannelType.MixBus:
+                self.object_address = b'\x00\x00\x01' # 0.0.1
+            case ChannelType.MatrixBus:
+                self.object_address = b'\x00\x00\x01' # 0.0.1
+            case ChannelType.VCA:
+                self.object_address = b'\x00\x00\x42' # 0.0.66
+            case _:
+                raise ArgumentError(channel_type, f"channel type {channel_type} is invalid")
+        self.channel_type = channel_type
+        self.channel_id = channel_id
         # Create widgets
         self.name_label = QLabel(self.channel_name)
         self.name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -67,10 +88,11 @@ class ChannelStrip(QWidget):
         self.button.setChecked(True)
         self.volume_slider = QSlider(Qt.Orientation.Vertical, tickPosition=QSlider.TickPosition.TicksBothSides)
         self.volume_slider.setRange(0, 1300)# -8832 to 640
+        self.volume_slider.setValue(1000)
         self.volume_slider.valueChanged.connect(lambda value: self.volume_test_box.setText(str(fader_to_db(value))))
         self.volume_test_box = QLineEdit(text="0")
         self.volume_test_box.setValidator(QIntValidator(bottom=-8832, top=640))
-        self.volume_set_btn = QPushButton("Set Fader Volume")
+        self.volume_set_btn = QPushButton("Send")
 
         # Create layout and add widgets
         layout = QVBoxLayout()
@@ -88,7 +110,7 @@ class ChannelStrip(QWidget):
     def toggle_btn_state(self):
         self.button_state = ButtonState.ON if self.button.isChecked() else ButtonState.OFF
         self.set_btn_color()
-        self.state_changed.emit(self.button_state == ButtonState.ON, self.object_address, self.channel_param)
+        self.state_changed.emit(self.button_state == ButtonState.ON, self.object_address, self.channel_id)
         logger.info(f"State of Channel '{self.channel_name}' set to {self.button_state}")
 
     def set_btn_color(self):
@@ -134,11 +156,11 @@ class MixerWidget(QWidget):
 
         self.content_layout = QHBoxLayout()
 
-        for i in range(10):
-            self.add_channel_strip(f"CH{i + 1}", ChannelStrip(f"CH{i + 1}", object_address=b'\x00\x00\x15', channel_param=struct.pack("!H", i+1)))
+        for i in range(1, 11):
+            self.add_channel_strip(f"CH{i}", ChannelStrip(f"CH{i}", channel_id=i))
 
-        self.add_channel_strip("PC", ChannelStrip("PC", object_address=b'\x00\x00\x15', channel_param=b'\x00\x41'))
-        self.add_channel_strip("L & R", ChannelStrip("L & R", object_address=b'\x00\x00\x02', channel_param=b'\x00\x01'))
+        self.add_channel_strip("PC", ChannelStrip("PC", channel_id=65, channel_type=ChannelType.MixerChannel))
+        self.add_channel_strip("L & R", ChannelStrip("L & R", channel_id = 1, channel_type=ChannelType.MasterBus))
 
         self.setLayout(self.content_layout)
 
@@ -191,12 +213,32 @@ class MainWindow(QMainWindow):
         self.control = Control(self.device, self.udp_transport, self.tcp_transport, self.mixerWidget.mixer_ip, self.mixerWidget.mixer_device_address)
         for channel_strip in self.mixerWidget.channel_strips:
             self.mixerWidget.channel_strips[channel_strip].state_changed.connect(self.control.set_channel_state)
-        self.mixerWidget.channel_strips["L & R"].volume_set_btn.clicked.connect(lambda:
-                            self.control.multi_param_set_int(int(self.mixerWidget.channel_strips["L & R"].volume_test_box.text()),
-                            b'\x00\x03', FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01', object_address=b'\x00\x00\x02')))
+            self.mixerWidget.channel_strips[channel_strip].volume_set_btn.clicked.connect(lambda _, channel_strip=channel_strip: self.on_volume_set(channel_strip))
+
 
         self.control.disco_info(broadcast=True, ip_address="255.255.255.255")
         self.control.disco_info(broadcast=True, ip_address="192.168.178.255")
+
+    def on_volume_set(self, channel_name):
+        channel_strip = self.mixerWidget.channel_strips[channel_name]
+        channel_param: bytes
+        match channel_strip.channel_type:
+            case ChannelType.MixerChannel:
+                channel_param = struct.pack("!H", channel_strip.channel_id + 72) # 1-72 are on/off switches
+            case ChannelType.MasterBus:
+                channel_param = struct.pack("!H", channel_strip.channel_id + 2) # 2 master buses
+            case ChannelType.MixBus:
+                channel_param = struct.pack("!H", channel_strip.channel_id + 18) # 14 mix buses + 4 matrix buses
+            case ChannelType.MatrixBus:
+                channel_param = struct.pack("!H", channel_strip.channel_id + 18 + 14) # (14 mix buses + 4 matrix buses) + 14 mix buses
+            case ChannelType.VCA:
+                channel_param = struct.pack("!H", channel_strip.channel_id + 8) # 8 VCAs
+            case _:
+                raise NotImplementedError
+        self.control.multi_param_set_int(int(channel_strip.volume_test_box.text()),
+                                         channel_param,
+                                         FullyQualifiedAddress(SI_IMPACT_DEVICE_ADDRESS, vd_address=b'\x01',
+                                                               object_address=channel_strip.object_address))
 
     def on_tcp_connected(self, transport):
         """Send all the parameter subscribe requests"""
