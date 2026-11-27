@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import math
 import struct
 import sys
 from enum import Enum
@@ -65,10 +66,9 @@ class ChannelStrip(QWidget):
         self.button.setCheckable(True)
         self.button.setChecked(True)
         self.volume_slider = QSlider(Qt.Orientation.Vertical, tickPosition=QSlider.TickPosition.TicksBothSides)
-        self.volume_slider.setMinimum(-8832)
-        self.volume_slider.setMaximum(640)
-        self.volume_slider.valueChanged.connect(lambda value: self.volume_test_box.setText(str(value)))
-        self.volume_test_box = QLineEdit()
+        self.volume_slider.setRange(0, 1300)# -8832 to 640
+        self.volume_slider.valueChanged.connect(lambda value: self.volume_test_box.setText(str(fader_to_db(value))))
+        self.volume_test_box = QLineEdit(text="0")
         self.volume_test_box.setValidator(QIntValidator(bottom=-8832, top=640))
         self.volume_set_btn = QPushButton("Set Fader Volume")
 
@@ -100,6 +100,20 @@ class ChannelStrip(QWidget):
             case ButtonState.MUTED:
                 self.button.setStyleSheet("background-color: red")
 
+def fader_to_db(fader_value: int):
+    min_val = -8832
+    max_val = 640
+    if fader_value <= 0: return min_val
+    db_val = 20 * math.log10(fader_value / 1000)
+
+    if fader_value < 1000:
+        db_val *= 133
+    else:
+        db_val *= 281
+
+    if db_val < min_val: return min_val
+    if db_val > max_val: return max_val
+    return int(db_val)
 
 class MixerWidget(QWidget):
     mixer_ip: str
@@ -236,6 +250,10 @@ if __name__ == '__main__':
     # Create and show the window
     window = MainWindow()
     window.show()
+
+    with open("style.qss" ,"rt") as f:
+        _stylesheet = f.read()
+        app.setStyleSheet(_stylesheet)
 
     logger.info("Application started")
 
